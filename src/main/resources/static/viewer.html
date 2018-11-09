@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Check Inventory Viewer</title>
+  <script src="https://unpkg.com/bpmn-js@3.0.1/dist/bpmn-viewer.development.js"></script>
+  <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <style>
+      html, body, #canvas {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+</head>
+<body>
+<div id="canvas">
+
+<script>
+      var diagramUrl = '/check-inventory.bpmn';
+
+      // viewer instance
+      var bpmnViewer = new BpmnJS({
+        container: '#canvas'
+      });
+
+
+      function openDiagram(bpmnXml) {
+
+        // import diagram
+        bpmnViewer.importXML(bpmnXml, function(err) {
+
+          if (err) {
+            return console.error('could not import BPMN 2.0 diagram', err);
+          }
+
+          // access viewer components
+          var canvas = bpmnViewer.get('canvas');
+
+          // zoom to fit full viewport
+          canvas.zoom(2, {x: 0, y: 0});
+
+          fetch("http://localhost:8000/records.json")
+          .then(r => r.json())
+          .then(filterRecords)
+          .then(addOverlays);
+        });
+      }
+
+      function filterRecords(records) {
+        var urlParams = new URLSearchParams(window.location.search);
+        var key = urlParams.get("key");
+
+        return records.filter( r => r.metadata.valueType === 'WORKFLOW_INSTANCE' && r.metadata.intent === 'ELEMENT_COMPLETED' && (key === null || r.value.workflowInstanceKey == key))
+          .reduce((elements, r) => {
+            var id = r.value.elementId;
+            elements[id] = (elements[id] || 0) + 1;
+            return elements;
+          }, {});
+      }
+
+      function addOverlays(elements) {
+          delete elements['check-inventory'];
+          console.log(elements);
+          var overlays = bpmnViewer.get('overlays');
+
+          for(var id in elements) {
+            overlays.add(id, {
+              position: {
+                bottom: 15,
+                right: 15,
+              },
+              html: '<div class="badge badge-pill badge-primary">' + elements[id] +'</div>'
+            });
+          }
+      }
+
+      fetch(diagramUrl).then(r => r.text()).then(openDiagram);
+    </script>
+<svg id="helper-svg" width="0" height="0" style="visibility: hidden; position: fixed"></svg>
+</body>
+</html>

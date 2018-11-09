@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_0d48khv" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Zeebe Modeler" exporterVersion="0.2.0">
+  <bpmn:process id="check-inventory" isExecutable="true">
+    <bpmn:startEvent id="CheckInventoryStart" name="Inventory Check Requested">
+      <bpmn:outgoing>SequenceFlow_1dm42nx</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1dm42nx" sourceRef="CheckInventoryStart" targetRef="CheckInventoryTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0fcrwqm" sourceRef="CheckInventoryTask" targetRef="ItemStatusMessage" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ezz9ui" sourceRef="ItemStatusMessage" targetRef="ProcessMessagesTask" />
+    <bpmn:exclusiveGateway id="MessagesReceivedGateway" name="All Mesages Recieved?" default="SequenceFlow_0jcosd3">
+      <bpmn:incoming>SequenceFlow_0lrj4eq</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ieqx1r</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0jcosd3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0lrj4eq" sourceRef="ProcessMessagesTask" targetRef="MessagesReceivedGateway" />
+    <bpmn:endEvent id="CheckInventoryEnd" name="Inventory Check Completed&#10;">
+      <bpmn:incoming>SequenceFlow_0ieqx1r</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0ieqx1r" name="Yes" sourceRef="MessagesReceivedGateway" targetRef="CheckInventoryEnd">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">$.finished == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="CheckInventoryTask" name="Check Inventory">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="check-inventory" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1dm42nx</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0fcrwqm</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="ItemStatusMessage" name="Items available?">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="$" target="$.message" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0fcrwqm</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0jcosd3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ezz9ui</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_0oa8u8e" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="ProcessMessagesTask" name="Process Messages">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="process-messages" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0ezz9ui</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0lrj4eq</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0jcosd3" name="No" sourceRef="MessagesReceivedGateway" targetRef="ItemStatusMessage" />
+  </bpmn:process>
+  <bpmn:message id="Message_0oa8u8e" name="item-status">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="$.checkId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="check-inventory">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="CheckInventoryStart">
+        <dc:Bounds x="173" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="151" y="145" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1dm42nx_di" bpmnElement="SequenceFlow_1dm42nx">
+        <di:waypoint x="209" y="120" />
+        <di:waypoint x="280" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fcrwqm_di" bpmnElement="SequenceFlow_0fcrwqm">
+        <di:waypoint x="380" y="120" />
+        <di:waypoint x="458" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ezz9ui_di" bpmnElement="SequenceFlow_0ezz9ui">
+        <di:waypoint x="494" y="120" />
+        <di:waypoint x="580" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1qhj7dp_di" bpmnElement="MessagesReceivedGateway" isMarkerVisible="true">
+        <dc:Bounds x="755" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="750" y="66" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lrj4eq_di" bpmnElement="SequenceFlow_0lrj4eq">
+        <di:waypoint x="680" y="120" />
+        <di:waypoint x="755" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0k096eu_di" bpmnElement="CheckInventoryEnd">
+        <dc:Bounds x="877" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="855" y="145" width="81" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ieqx1r_di" bpmnElement="SequenceFlow_0ieqx1r">
+        <di:waypoint x="805" y="120" />
+        <di:waypoint x="877" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="832" y="102" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0w3jao0_di" bpmnElement="CheckInventoryTask">
+        <dc:Bounds x="280" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_1s1kb8x_di" bpmnElement="ItemStatusMessage">
+        <dc:Bounds x="458" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="436" y="84" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_02i0qr1_di" bpmnElement="ProcessMessagesTask">
+        <dc:Bounds x="580" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0jcosd3_di" bpmnElement="SequenceFlow_0jcosd3">
+        <di:waypoint x="780" y="145" />
+        <di:waypoint x="780" y="223" />
+        <di:waypoint x="476" y="223" />
+        <di:waypoint x="476" y="138" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="760" y="176" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
