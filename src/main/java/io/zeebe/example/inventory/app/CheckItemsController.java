@@ -2,7 +2,7 @@ package io.zeebe.example.inventory.app;
 
 import io.zeebe.client.api.events.WorkflowInstanceEvent;
 import io.zeebe.example.inventory.workflow.CheckInventoryPayload;
-import io.zeebe.example.inventory.workflow.ZeebeService;
+import io.zeebe.spring.client.ZeebeClientLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,8 @@ public class CheckItemsController {
 
   @Autowired private SimpMessagingTemplate messagingTemplate;
 
-  @Autowired private ZeebeService zeebe;
+  @Autowired
+  private ZeebeClientLifecycle zeebe;
 
   @MessageMapping("/checkItems")
   public void checkItems(CheckItemsRequest message, @Header("simpSessionId") String sessionId) {
@@ -28,7 +29,6 @@ public class CheckItemsController {
 
     WorkflowInstanceEvent response =
         zeebe
-            .getClient()
             .workflowClient()
             .newCreateInstanceCommand()
             .bpmnProcessId("check-inventory")

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Message Correlation Timeline</title>
+  <script src="/vis.min.js"></script>
+  <link href="/vis.min.css" rel="stylesheet">
+</head>
+<body>
+<div id="visualization"></div>
+
+<script type="text/javascript">
+  // DOM element where the Timeline will be attached
+  var container = document.getElementById('visualization');
+
+  // Create a DataSet (allows two way data-binding)
+  var items = new vis.DataSet();
+  var groups = new vis.DataSet([
+    {
+      id: 'published',
+      content: 'Published'
+    },
+    {
+      id: 'correlated',
+      content: 'Correlated'
+    }
+  ]);
+
+  // Configuration for the Timeline
+  var options = {};
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var key = urlParams.get("key");
+
+  fetch("http://localhost:9200/zeebe-record-message/_search", {
+    method: 'post',
+    headers: {
+      "Content-type": "application/json; charset=UTF-8"
+    },
+    body: '{ "query": { "bool": { "filter": { "term": { "metadata.intent": "PUBLISHED" } }, "must": { "term": { "value.correlationKey": "' + key + '" } } } } }'
+  })
+  .then(r => r.json())
+  .then(function (data) {
+    console.log('Request succeeded with JSON response', data);
+    data.hits.hits.forEach(hit => {
+      var payload = JSON.parse(hit._source.value.payload);
+      items.add({content: payload.item, start: hit._source.timestamp, group: 'published'})
+    });
+  })
+  .then(function() {
+    fetch("http://localhost:9200/zeebe-record-workflow-instance-subscription/_search", {
+      method: 'post',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      body: '{ "query": { "bool": { "filter": { "term": { "metadata.intent": "CORRELATED" } }, "must": { "term": { "value.workflowInstanceKey": "' + key + '" } } } } }'
+    })
+    .then(r => r.json())
+    .then(function (data) {
+      console.log('Request succeeded with JSON response', data);
+      data.hits.hits.forEach(hit => {
+        var payload = JSON.parse(hit._source.value.payload);
+        items.add({content: payload.item, start: hit._source.timestamp, group: 'correlated'})
+      });
+    })
+    .then(function() {
+      // Create a Timeline
+      var timeline = new vis.Timeline(container, items, options);
+      timeline.setGroups(groups);
+    })
+  })
+  .catch(function (error) {
+    console.log('Request failed', error);
+  });
+
+
+</script>
+</body>
+</html>

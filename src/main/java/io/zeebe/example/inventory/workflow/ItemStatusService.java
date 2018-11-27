@@ -1,6 +1,7 @@
 package io.zeebe.example.inventory.workflow;
 
 import io.zeebe.example.inventory.app.CheckItemResult;
+import io.zeebe.spring.client.ZeebeClientLifecycle;
 import java.time.Duration;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -14,7 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ItemStatusService {
 
-  @Autowired private ZeebeService zeebe;
+  @Autowired
+  private ZeebeClientLifecycle zeebe;
 
   private Logger log = LoggerFactory.getLogger(ItemStatusService.class);
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
@@ -44,13 +46,12 @@ public class ItemStatusService {
               result.isAvailable());
 
           zeebe
-              .getClient()
               .workflowClient()
               .newPublishMessageCommand()
               .messageName("item-status")
               .correlationKey(checkId)
               .payload(result)
-              .timeToLive(Duration.ofSeconds(10))
+              .timeToLive(Duration.ofMinutes(10))
               .send()
               .join();
         },
