@@ -16,11 +16,11 @@ public class ResponseService {
   @Autowired
   public SimpMessagingTemplate messagingTemplate;
 
-  public void sendResponse(String sessionId, List<CheckItemResult> results) {
+  public void sendResponse(String sessionId, String checkId, List<CheckItemResult> results) {
     messagingTemplate.convertAndSendToUser(
       sessionId,
       "/queue/results",
-      new CheckItemsResponse().setItems(results),
+      new CheckItemsResponse().setCheckId(checkId).setItems(results),
       messageHeaders(sessionId));
   }
 

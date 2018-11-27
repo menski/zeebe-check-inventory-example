@@ -26,7 +26,9 @@ function connect(callback) {
   stompClient.connect({}, function (frame) {
       console.log('Connected: ' + frame);
       stompClient.subscribe('/user/queue/results', function (response) {
-         JSON.parse(response.body).items.forEach(updateItem);
+         var body = JSON.parse(response.body);
+         body.items.forEach(updateItem);
+         $("#checkId").html('<a style="color:white;" href="http://localhost:9090/timeline.html?key=' + body.checkId +'" target="_blank">' + body.checkId + '</a>');
       });
       callback();
   });

@@ -4,7 +4,17 @@ import java.util.List;
 
 public class CheckItemsResponse {
 
+  private String checkId;
   private List<CheckItemResult> items;
+
+  public String getCheckId() {
+    return checkId;
+  }
+
+  public CheckItemsResponse setCheckId(String checkId) {
+    this.checkId = checkId;
+    return this;
+  }
 
   public List<CheckItemResult> getItems() {
     return items;
@@ -17,6 +27,9 @@ public class CheckItemsResponse {
 
   @Override
   public String toString() {
-    return "CheckItemsResponse{" + "items=" + items + '}';
+    return "CheckItemsResponse{" +
+      "checkId=" + checkId +
+      ", items=" + items +
+      '}';
   }
 }

@@ -34,7 +34,7 @@ public class ProcessMessagesService {
     client.newCompleteCommand(job.getKey()).payload(payload).send().join();
 
     if (payload.isFinished()) {
-      responseService.sendResponse(payload.getSessionId(), payload.getResults());
+      responseService.sendResponse(payload.getSessionId(), payload.getCheckId(), payload.getResults());
     }
   }
 
