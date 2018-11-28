@@ -1,5 +1,6 @@
 package io.zeebe.example.inventory.workflow;
 
+import io.zeebe.client.ZeebeClient;
 import io.zeebe.client.api.clients.JobClient;
 import io.zeebe.client.api.response.ActivatedJob;
 import io.zeebe.spring.client.annotation.ZeebeWorker;
@@ -13,6 +14,7 @@ public class CheckInventoryService {
 
   @ZeebeWorker(type = "check-inventory")
   public void checkInventory(JobClient client, ActivatedJob job) {
+
     CheckInventoryPayload payload = job.getPayloadAsType(CheckInventoryPayload.class);
     payload.setCheckId(Long.toString(job.getHeaders().getWorkflowInstanceKey()));
 
