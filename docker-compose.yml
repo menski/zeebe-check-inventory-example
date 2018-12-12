@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+    zeebe:
+        image: camunda/zeebe:0.14.0
+        container_name: zeebe
+        ports:
+            - 26500:26500
+            - 8000:8000
+        links:
+            - elasticsearch
+        volumes:
+            - ./zeebe.cfg.toml:/usr/local/zeebe/conf/zeebe.cfg.toml
+        restart: always
+
+    operate:
+        image: camunda/camunda-operate:SNAPSHOT
+        container_name: operate
+        ports:
+            - 8080:8080
+        links:
+            - elasticsearch
+            - zeebe
+        volumes:
+            - ./application.yml:/application.yml
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.5.0
+        container_name: elasticsearch
+        ports:
+            - 9200:9200
+        environment:
+            - discovery.type=single-node
+            - cluster.name=elasticsearch
+            - http.cors.enabled=true
+            - "http.cors.allow-origin=*"
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana-oss:6.5.0
+        container_name: kibana
+        ports:
+            - 5601:5601
+        links:
+            - elasticsearch
