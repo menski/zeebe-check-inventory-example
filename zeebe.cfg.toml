@@ -1,0 +1,18 @@
+[[exporters]]
+id = "debug-http"
+className = "io.zeebe.broker.exporter.debug.DebugHttpExporter"
+  [exporters.args]
+    port = 8000
+    limit = 4096
+
+[[exporters]]
+id = "elasticsearch"
+className = "io.zeebe.exporter.ElasticsearchExporter"
+  [exporters.args]
+  url = "http://elasticsearch:9200"
+  [exporters.args.bulk]
+  size = 1
+  [exporters.args.index]
+  message = true
+  messageSubscription = true
+  workflowInstanceSubscription = true
